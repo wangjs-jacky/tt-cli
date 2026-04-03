@@ -117,15 +117,30 @@ export async function loginWithBrowser(config: OAuthConfig, port = DEFAULT_PORT)
   // 再打开浏览器
   await open(authUrl);
 
-  // 等待回调
-  const { code, close } = await codePromise;
+  // 等待回调（含超时处理）
+  let callbackResult: { code: string; close: () => void };
+  try {
+    callbackResult = await codePromise;
+  } catch (err) {
+    if ((err as Error).message === 'TIMEOUT') {
+      throw new Error(
+        '登录超时（2 分钟未收到授权回调）。\n' +
+        '可能原因：\n' +
+        '  1. 浏览器授权页面显示了错误（如 invalid_client）\n' +
+        '  2. 凭证与当前区域不匹配\n' +
+        `  当前区域：${region === 'cn' ? '国内版（dida365.com）' : '国际版（ticktick.com）'}\n` +
+        '建议：检查浏览器页面错误，或尝试切换区域/重新配置凭证'
+      );
+    }
+    throw err;
+  }
 
   // 交换 token
-  const token = await exchangeCode(config, code, port);
+  const token = await exchangeCode(config, callbackResult.code, port);
   setToken(token);
 
   // 关闭服务器
-  close();
+  callbackResult.close();
 
   return token;
 }

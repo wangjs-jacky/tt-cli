@@ -1,6 +1,6 @@
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
-import type { Region } from '../types.js';
+import type { Region, OAuthConfig } from '../types.js';
 import { getOAuth, setOAuth, getToken, clearToken, isTokenValid, getRegion, setRegion } from '../utils/config.js';
 import { getEndpoints } from '../utils/endpoints.js';
 import { loginWithBrowser } from '../api/oauth.js';
@@ -10,6 +10,29 @@ const REGION_LABELS: Record<Region, string> = {
   cn: '国内版（滴答清单）',
   global: '国际版（TickTick）',
 };
+
+/** 引导用户输入 OAuth 凭证 */
+async function promptOAuthCredentials(developerUrl: string): Promise<OAuthConfig | undefined> {
+  p.log.info(`请访问 ${developerUrl} 获取凭证`);
+  p.log.info('Redirect URI 设置为: http://localhost:3000/callback\n');
+
+  const clientId = await p.text({
+    message: '请输入 Client ID',
+    validate: (v) => (!v ? 'Client ID 不能为空' : undefined),
+  });
+  if (p.isCancel(clientId)) return undefined;
+
+  const clientSecret = await p.text({
+    message: '请输入 Client Secret',
+    validate: (v) => (!v ? 'Client Secret 不能为空' : undefined),
+  });
+  if (p.isCancel(clientSecret)) return undefined;
+
+  const oauth: OAuthConfig = { clientId, clientSecret };
+  setOAuth(oauth);
+  p.log.success('凭证已保存');
+  return oauth;
+}
 
 /** tt login */
 export async function loginCommand(): Promise<void> {
@@ -37,29 +60,12 @@ export async function loginCommand(): Promise<void> {
       p.outro('已取消');
       return;
     }
-    oauth = undefined; // 强制重新输入凭证
+    oauth = undefined;
   }
 
   if (!oauth) {
-    p.log.info('首次使用需要注册开发者应用');
-    p.log.info(`请访问 ${endpoints.developerUrl} 注册`);
-    p.log.info('Redirect URI 设置为: http://localhost:3000/callback\n');
-
-    const clientId = await p.text({
-      message: '请输入 Client ID',
-      validate: (v) => (!v ? 'Client ID 不能为空' : undefined),
-    });
-    if (p.isCancel(clientId)) { p.outro('已取消'); return; }
-
-    const clientSecret = await p.text({
-      message: '请输入 Client Secret',
-      validate: (v) => (!v ? 'Client Secret 不能为空' : undefined),
-    });
-    if (p.isCancel(clientSecret)) { p.outro('已取消'); return; }
-
-    oauth = { clientId, clientSecret };
-    setOAuth(oauth);
-    p.log.success('OAuth 凭证已保存');
+    oauth = await promptOAuthCredentials(endpoints.developerUrl);
+    if (!oauth) { p.outro('已取消'); return; }
   }
 
   const s = p.spinner();
@@ -71,7 +77,43 @@ export async function loginCommand(): Promise<void> {
     p.outro(pc.green('✔ 登录成功！'));
   } catch (err) {
     s.stop('登录失败');
-    p.outro(pc.red(`✖ ${(err as Error).message}`));
+    const msg = (err as Error).message;
+
+    if (msg.includes('invalid_client') || msg.includes('TIMEOUT')) {
+      p.log.error(pc.red('登录失败：凭证无效或与区域不匹配'));
+      p.log.info(`当前区域：${REGION_LABELS[region]}`);
+      p.log.info(`凭证来源：${oauth.region ? REGION_LABELS[oauth.region] : '未知'}\n`);
+
+      const action = await p.select({
+        message: '请选择下一步操作',
+        options: [
+          { value: 'switch', label: `切换到${region === 'cn' ? '国际版' : '国内版'}` },
+          { value: 'reconfig', label: '重新输入当前区域的凭证' },
+          { value: 'exit', label: '退出' },
+        ],
+      });
+
+      if (p.isCancel(action) || action === 'exit') {
+        p.outro('已退出');
+        return;
+      }
+
+      if (action === 'switch') {
+        const newRegion: Region = region === 'cn' ? 'global' : 'cn';
+        setRegion(newRegion);
+        p.log.success(`已切换到 ${REGION_LABELS[newRegion]}，请重新运行 tt login`);
+        p.outro('区域已切换');
+        return;
+      }
+
+      if (action === 'reconfig') {
+        await promptOAuthCredentials(endpoints.developerUrl);
+        p.outro('凭证已更新，请重新运行 tt login');
+        return;
+      }
+    }
+
+    p.outro(pc.red(`✖ ${msg}`));
     process.exit(1);
   }
 }
@@ -120,11 +162,10 @@ export async function whoamiCommand(): Promise<void> {
 
 /** tt config [--region cn|global] */
 export async function configCommand(args?: { region?: Region }): Promise<void> {
-  // 切换区域
   if (args?.region) {
     const oldRegion = getRegion();
     setRegion(args.region);
-    clearToken(); // 切换区域后 token 失效
+    clearToken();
     p.intro(pc.bgCyan(pc.black(' 滴答清单 CLI 配置 ')));
     p.log.success(`已切换到 ${REGION_LABELS[args.region]}`);
     if (oldRegion !== args.region) {
@@ -134,7 +175,6 @@ export async function configCommand(args?: { region?: Region }): Promise<void> {
     return;
   }
 
-  // 显示配置
   const region = getRegion();
   p.intro(pc.bgCyan(pc.black(' 滴答清单 CLI 配置 ')));
   p.log.info(`区域: ${REGION_LABELS[region]}`);
