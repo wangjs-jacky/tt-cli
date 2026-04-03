@@ -49,11 +49,16 @@ export function getOAuth(): OAuthConfig | undefined {
   return readConfig().oauth;
 }
 
-/** 保存 OAuth 凭证 */
+/** 保存 OAuth 凭证（同时记录当前区域） */
 export function setOAuth(oauth: OAuthConfig): void {
   const config = readConfig();
-  config.oauth = oauth;
+  config.oauth = { ...oauth, region: getRegion() };
   writeConfig(config);
+}
+
+/** 获取凭证所属区域 */
+export function getOAuthRegion(): Region | undefined {
+  return readConfig().oauth?.region;
 }
 
 /** 读取 Token */

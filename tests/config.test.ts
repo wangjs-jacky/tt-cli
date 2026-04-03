@@ -30,7 +30,7 @@ describe('config module', () => {
     const oauth = { clientId: 'test-id', clientSecret: 'test-secret' };
     config.setOAuth(oauth);
     const result = config.getOAuth();
-    expect(result).toEqual(oauth);
+    expect(result).toMatchObject(oauth);
   });
 
   it('应正确保存和读取 Token', () => {
@@ -75,13 +75,13 @@ describe('config module', () => {
     });
     config.clearToken();
     expect(config.getToken()).toBeUndefined();
-    expect(config.getOAuth()).toEqual({ clientId: 'id', clientSecret: 'secret' });
+    expect(config.getOAuth()).toMatchObject({ clientId: 'id', clientSecret: 'secret' });
   });
 
   it('配置应写入 JSON 文件', () => {
     config.setOAuth({ clientId: 'id', clientSecret: 'secret' });
     const configPath = path.join(TEST_DIR, 'config.json');
     const content = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    expect(content.oauth).toEqual({ clientId: 'id', clientSecret: 'secret' });
+    expect(content.oauth).toMatchObject({ clientId: 'id', clientSecret: 'secret' });
   });
 });

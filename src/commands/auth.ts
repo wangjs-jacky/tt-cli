@@ -25,6 +25,21 @@ export async function loginCommand(): Promise<void> {
   }
 
   let oauth = getOAuth();
+
+  // 检测凭证区域不匹配
+  if (oauth?.region && oauth.region !== region) {
+    p.log.warn(`当前区域为 ${REGION_LABELS[region]}，但保存的凭证属于 ${REGION_LABELS[oauth.region]}`);
+    p.log.warn('凭证与区域不匹配会导致登录失败\n');
+    const reconfigure = await p.confirm({
+      message: `是否为 ${REGION_LABELS[region]} 重新配置凭证？`,
+    });
+    if (p.isCancel(reconfigure) || !reconfigure) {
+      p.outro('已取消');
+      return;
+    }
+    oauth = undefined; // 强制重新输入凭证
+  }
+
   if (!oauth) {
     p.log.info('首次使用需要注册开发者应用');
     p.log.info(`请访问 ${endpoints.developerUrl} 注册`);

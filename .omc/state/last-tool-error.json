@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ls /Users/jiashengwang/jacky-github/tt-cli/README.md 2>&1\",\"description\":\"Check if README already exists\"}",
+  "error": "Exit code 1\nls: /Users/jiashengwang/jacky-github/tt-cli/README.md: No such file or directory",
+  "timestamp": "2026-04-03T06:15:57.049Z",
+  "retry_count": 1
+}

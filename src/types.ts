@@ -2,6 +2,8 @@
 export interface OAuthConfig {
   clientId: string;
   clientSecret: string;
+  /** 凭证所属区域 */
+  region?: Region;
 }
 
 /** 持久化的 Token 数据 */
