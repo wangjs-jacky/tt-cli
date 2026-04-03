@@ -1,51 +1,52 @@
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
-import { getOAuth, setOAuth, getToken, clearToken, isTokenValid } from '../utils/config.js';
+import type { Region } from '../types.js';
+import { getOAuth, setOAuth, getToken, clearToken, isTokenValid, getRegion, setRegion } from '../utils/config.js';
+import { getEndpoints } from '../utils/endpoints.js';
 import { loginWithBrowser } from '../api/oauth.js';
 import { apiRequest } from '../api/client.js';
 
+const REGION_LABELS: Record<Region, string> = {
+  cn: '国内版（滴答清单）',
+  global: '国际版（TickTick）',
+};
+
 /** tt login */
 export async function loginCommand(): Promise<void> {
-  p.intro(pc.bgCyan(pc.black(' 滴答清单 CLI 登录 ')));
+  const region = getRegion();
+  const endpoints = getEndpoints(region);
 
-  // 已登录则跳过
+  p.intro(pc.bgCyan(pc.black(` 滴答清单 CLI 登录 [${REGION_LABELS[region]}] `)));
+
   const token = getToken();
   if (token && isTokenValid()) {
     p.outro(pc.green('已登录，无需重复登录。使用 tt logout 先登出。'));
     return;
   }
 
-  // 获取或输入 OAuth 凭证
   let oauth = getOAuth();
   if (!oauth) {
-    p.log.info('首次使用需要注册 TickTick 开发者应用');
-    p.log.info('请访问 https://developer.ticktick.com/app 注册');
+    p.log.info('首次使用需要注册开发者应用');
+    p.log.info(`请访问 ${endpoints.developerUrl} 注册`);
     p.log.info('Redirect URI 设置为: http://localhost:3000/callback\n');
 
     const clientId = await p.text({
       message: '请输入 Client ID',
       validate: (v) => (!v ? 'Client ID 不能为空' : undefined),
     });
-    if (p.isCancel(clientId)) {
-      p.outro('已取消');
-      return;
-    }
+    if (p.isCancel(clientId)) { p.outro('已取消'); return; }
 
     const clientSecret = await p.text({
       message: '请输入 Client Secret',
       validate: (v) => (!v ? 'Client Secret 不能为空' : undefined),
     });
-    if (p.isCancel(clientSecret)) {
-      p.outro('已取消');
-      return;
-    }
+    if (p.isCancel(clientSecret)) { p.outro('已取消'); return; }
 
     oauth = { clientId, clientSecret };
     setOAuth(oauth);
     p.log.success('OAuth 凭证已保存');
   }
 
-  // 开始 OAuth 流程
   const s = p.spinner();
   s.start('正在打开浏览器进行授权...');
 
@@ -69,6 +70,7 @@ export async function logoutCommand(): Promise<void> {
 
 /** tt whoami */
 export async function whoamiCommand(): Promise<void> {
+  const region = getRegion();
   p.intro(pc.bgCyan(pc.black(' 滴答清单 CLI 状态 ')));
 
   const token = getToken();
@@ -86,14 +88,13 @@ export async function whoamiCommand(): Promise<void> {
 
     const expiresIn = token.expiresAt - Date.now();
     if (expiresIn <= 0) {
-      p.log.warn('Token 已过期');
       p.outro(pc.yellow('Token 已失效，请运行 tt login 重新登录'));
       return;
     }
 
     const hours = Math.floor(expiresIn / 3600000);
     const minutes = Math.floor((expiresIn % 3600000) / 60000);
-    p.log.success(pc.green('已登录'));
+    p.log.success(pc.green(`已登录 [${REGION_LABELS[region]}]`));
     p.log.info(`Token 有效期: 剩余 ${hours} 小时 ${minutes} 分钟`);
     p.outro('一切正常');
   } catch {
@@ -102,9 +103,26 @@ export async function whoamiCommand(): Promise<void> {
   }
 }
 
-/** tt config */
-export async function configCommand(): Promise<void> {
+/** tt config [--region cn|global] */
+export async function configCommand(args?: { region?: Region }): Promise<void> {
+  // 切换区域
+  if (args?.region) {
+    const oldRegion = getRegion();
+    setRegion(args.region);
+    clearToken(); // 切换区域后 token 失效
+    p.intro(pc.bgCyan(pc.black(' 滴答清单 CLI 配置 ')));
+    p.log.success(`已切换到 ${REGION_LABELS[args.region]}`);
+    if (oldRegion !== args.region) {
+      p.log.warn('区域已变更，请重新运行 tt login');
+    }
+    p.outro('配置已更新');
+    return;
+  }
+
+  // 显示配置
+  const region = getRegion();
   p.intro(pc.bgCyan(pc.black(' 滴答清单 CLI 配置 ')));
+  p.log.info(`区域: ${REGION_LABELS[region]}`);
 
   const oauth = getOAuth();
   if (oauth) {
@@ -122,5 +140,6 @@ export async function configCommand(): Promise<void> {
     p.log.info('Token: 未登录');
   }
 
+  p.log.info('\n使用 tt config --region cn/global 切换区域');
   p.outro('配置信息如上');
 }

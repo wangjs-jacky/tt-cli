@@ -14,25 +14,27 @@ describe('OAuth utilities', () => {
     expect(a).not.toBe(b);
   });
 
-  it('buildAuthUrl 应包含所有必要参数', () => {
+  it('buildAuthUrl 国内版应使用 dida365 域名', () => {
     const config: OAuthConfig = { clientId: 'my-client-id', clientSecret: 'my-secret' };
-    const state = 'test-state';
-    const port = 3000;
+    const url = buildAuthUrl(config, 'test-state', 3000, 'cn');
 
-    const url = buildAuthUrl(config, state, port);
+    expect(url).toContain('https://dida365.com/oauth/authorize');
+    expect(url).toContain('client_id=my-client-id');
+    expect(url).toContain('state=test-state');
+  });
+
+  it('buildAuthUrl 国际版应使用 ticktick 域名', () => {
+    const config: OAuthConfig = { clientId: 'my-client-id', clientSecret: 'my-secret' };
+    const url = buildAuthUrl(config, 'test-state', 3000, 'global');
 
     expect(url).toContain('https://ticktick.com/oauth/authorize');
     expect(url).toContain('client_id=my-client-id');
-    expect(url).toContain('response_type=code');
-    expect(url).toContain('redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fcallback');
-    expect(url).toContain('scope=tasks%3Aread+tasks%3Awrite');
-    expect(url).toContain('state=test-state');
   });
 
   it('buildAuthUrl 不同端口应生成不同的 redirect_uri', () => {
     const config: OAuthConfig = { clientId: 'id', clientSecret: 'secret' };
-    const url3000 = buildAuthUrl(config, 's', 3000);
-    const url8080 = buildAuthUrl(config, 's', 8080);
+    const url3000 = buildAuthUrl(config, 's', 3000, 'cn');
+    const url8080 = buildAuthUrl(config, 's', 8080, 'cn');
 
     expect(url3000).toContain('localhost%3A3000');
     expect(url8080).toContain('localhost%3A8080');

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import type { AppConfig, OAuthConfig, TokenData } from '../types.js';
+import type { AppConfig, OAuthConfig, Region, TokenData } from '../types.js';
 
 /** 配置目录，可通过环境变量覆盖（测试用） */
 function getConfigDir(): string {
@@ -30,6 +30,18 @@ function readConfig(): AppConfig {
 function writeConfig(config: AppConfig): void {
   ensureConfigDir();
   fs.writeFileSync(getConfigPath(), JSON.stringify(config, null, 2));
+}
+
+/** 读取区域设置，默认国内版 */
+export function getRegion(): Region {
+  return readConfig().region ?? 'cn';
+}
+
+/** 保存区域设置 */
+export function setRegion(region: Region): void {
+  const config = readConfig();
+  config.region = region;
+  writeConfig(config);
 }
 
 /** 读取 OAuth 凭证 */

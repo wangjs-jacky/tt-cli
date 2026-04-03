@@ -1,11 +1,10 @@
 import crypto from 'crypto';
 import open from 'open';
 import type { OAuthConfig, TokenData, TokenResponse } from '../types.js';
-import { getOAuth, getToken, setToken } from '../utils/config.js';
+import { getOAuth, getToken, setToken, getRegion } from '../utils/config.js';
+import { getEndpoints } from '../utils/endpoints.js';
 import { createCallbackServer } from '../utils/server.js';
 
-const AUTH_URL = 'https://ticktick.com/oauth/authorize';
-const TOKEN_URL = 'https://ticktick.com/oauth/token';
 const SCOPES = 'tasks:read tasks:write';
 const DEFAULT_PORT = 3000;
 
@@ -15,7 +14,8 @@ export function generateState(): string {
 }
 
 /** 构建授权 URL */
-export function buildAuthUrl(config: OAuthConfig, state: string, port: number): string {
+export function buildAuthUrl(config: OAuthConfig, state: string, port: number, region: 'cn' | 'global' = 'cn'): string {
+  const endpoints = getEndpoints(region);
   const redirectUri = `http://localhost:${port}/callback`;
   const params = new URLSearchParams({
     client_id: config.clientId,
@@ -24,7 +24,7 @@ export function buildAuthUrl(config: OAuthConfig, state: string, port: number): 
     scope: SCOPES,
     state,
   });
-  return `${AUTH_URL}?${params.toString()}`;
+  return `${endpoints.authUrl}?${params.toString()}`;
 }
 
 /** 用授权码换取 Token */
@@ -33,10 +33,12 @@ export async function exchangeCode(
   code: string,
   port: number
 ): Promise<TokenData> {
+  const region = getRegion();
+  const endpoints = getEndpoints(region);
   const redirectUri = `http://localhost:${port}/callback`;
   const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
 
-  const response = await fetch(TOKEN_URL, {
+  const response = await fetch(endpoints.tokenUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -67,6 +69,8 @@ export async function exchangeCode(
 export async function refreshAccessToken(): Promise<TokenData> {
   const oauth = getOAuth();
   const token = getToken();
+  const region = getRegion();
+  const endpoints = getEndpoints(region);
 
   if (!oauth || !token) {
     throw new Error('未登录，请先运行 tt login');
@@ -74,7 +78,7 @@ export async function refreshAccessToken(): Promise<TokenData> {
 
   const credentials = Buffer.from(`${oauth.clientId}:${oauth.clientSecret}`).toString('base64');
 
-  const response = await fetch(TOKEN_URL, {
+  const response = await fetch(endpoints.tokenUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -103,8 +107,9 @@ export async function refreshAccessToken(): Promise<TokenData> {
 
 /** 完整登录流程 */
 export async function loginWithBrowser(config: OAuthConfig, port = DEFAULT_PORT): Promise<TokenData> {
+  const region = getRegion();
   const state = generateState();
-  const authUrl = buildAuthUrl(config, state, port);
+  const authUrl = buildAuthUrl(config, state, port, region);
 
   // 先启动服务器
   const codePromise = createCallbackServer(state, port);
