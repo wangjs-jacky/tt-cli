@@ -1,0 +1,42 @@
+{
+  "name": "@wangjs-jacky/tt-cli",
+  "version": "0.1.0",
+  "description": "滴答清单（TickTick）命令行工具",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "tt": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ticktick",
+    "dida",
+    "cli",
+    "todo",
+    "task"
+  ],
+  "author": "wangjs-jacky",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wangjs-jacky/tt-cli.git"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.2.0",
+    "cac": "^7.0.0",
+    "open": "^11.0.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
+}
