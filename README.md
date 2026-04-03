@@ -1,41 +1,59 @@
 # tt-cli
 
-滴答清单（TickTick）命令行工具。
+English | [中文](./README_CN.md)
 
-## 安装
+A command-line tool for TickTick (滴答清单), supporting both China region (dida365.com) and Global region (ticktick.com).
+
+## Install
 
 ```bash
 npm install -g @wangjs-jacky/tt-cli
 ```
 
-## 使用
+## Usage
 
-### 首次登录
+### First-time Login
 
 ```bash
 tt login
 ```
 
-首次使用会提示输入 Client ID 和 Client Secret，需要先到 [TickTick 开发者平台](https://developer.ticktick.com/app) 注册应用。
+You'll be prompted for Client ID and Client Secret. Register your app at [TickTick Developer Platform](https://developer.ticktick.com/app) first.
 
-注册时 Redirect URI 设置为：`http://localhost:3000/callback`
+Set Redirect URI to: `http://localhost:3000/callback`
 
-### 日常使用
-
-```bash
-tt whoami    # 查看登录状态
-tt logout    # 登出
-tt config    # 查看配置
-```
-
-## 开发
+### Switch Region
 
 ```bash
-npm install        # 安装依赖
-npm run build      # 构建
-npm test           # 运行测试
-npm run dev        # 监听模式开发
+tt config --region cn      # China region (dida365.com)
+tt config --region global   # Global region (ticktick.com)
 ```
+
+### Daily Use
+
+```bash
+tt whoami    # Check login status
+tt logout    # Log out
+tt config    # View configuration
+```
+
+## Development
+
+```bash
+npm install        # Install dependencies
+npm run build      # Build
+npm test           # Run tests
+npm run dev        # Watch mode
+```
+
+## Tech Stack
+
+| Category | Choice |
+|----------|--------|
+| CLI Framework | `cac` |
+| Terminal UI | `@clack/prompts` + `picocolors` |
+| Build | `tsup` (ESM only) |
+| Test | `vitest` |
 
 ## License
 

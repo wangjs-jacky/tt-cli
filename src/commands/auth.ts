@@ -63,6 +63,24 @@ export async function loginCommand(): Promise<void> {
     oauth = undefined;
   }
 
+  // 旧凭证无区域标记，提示确认后再补充
+  if (oauth && !oauth.region) {
+    p.log.warn('保存的凭证未标记区域，可能与当前区域不匹配');
+    const confirmRegion = await p.confirm({
+      message: `这些凭证是否用于 ${REGION_LABELS[region]}？`,
+    });
+    if (p.isCancel(confirmRegion)) {
+      p.outro('已取消');
+      return;
+    }
+    if (confirmRegion) {
+      setOAuth(oauth);
+      p.log.success(`已将凭证标记为 ${REGION_LABELS[region]}`);
+    } else {
+      oauth = undefined;
+    }
+  }
+
   if (!oauth) {
     oauth = await promptOAuthCredentials(endpoints.developerUrl);
     if (!oauth) { p.outro('已取消'); return; }
