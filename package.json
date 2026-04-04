@@ -1,5 +1,5 @@
 {
-  "name": "@wangjs-jacky/tt-cli",
+  "name": "@wangjs-jacky/ticktick-cli",
   "version": "0.1.0",
   "description": "滴答清单（TickTick）命令行工具",
   "type": "module",

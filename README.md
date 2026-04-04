@@ -1,6 +1,6 @@
 # tt-cli
 
-[![npm version](https://img.shields.io/npm/v/@wangjs-jacky/tt-cli.svg)](https://www.npmjs.com/package/@wangjs-jacky/tt-cli) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/@wangjs-jacky/ticktick-cli.svg)](https://www.npmjs.com/package/@wangjs-jacky/ticktick-cli) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 English | [中文](./README_CN.md)
 
@@ -9,7 +9,7 @@ A command-line tool for TickTick (滴答清单), supporting both China region (d
 ## Install
 
 ```bash
-npm install -g @wangjs-jacky/tt-cli
+npm install -g @wangjs-jacky/ticktick-cli
 ```
 
 ## Usage

@@ -1,6 +1,6 @@
 # tt-cli
 
-[![npm version](https://img.shields.io/npm/v/@wangjs-jacky/tt-cli.svg)](https://www.npmjs.com/package/@wangjs-jacky/tt-cli) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/@wangjs-jacky/ticktick-cli.svg)](https://www.npmjs.com/package/@wangjs-jacky/ticktick-cli) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [English](./README.md) | 中文
 
@@ -9,7 +9,7 @@
 ## 安装
 
 ```bash
-npm install -g @wangjs-jacky/tt-cli
+npm install -g @wangjs-jacky/ticktick-cli
 ```
 
 ## 使用

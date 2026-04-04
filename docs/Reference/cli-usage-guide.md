@@ -28,7 +28,7 @@
 ### 2. 安装
 
 ```bash
-npm install -g @wangjs-jacky/tt-cli
+npm install -g @wangjs-jacky/ticktick-cli
 ```
 
 ### 3. 首次登录
