@@ -6,7 +6,7 @@ import type {
   CreateTaskParams,
   UpdateTaskParams,
 } from '../types.js';
-import { formatTaskTime } from '../utils/format.js';
+import { formatTaskTime, normalizeTickTickDate } from '../utils/format.js';
 import {
   getProjects,
   getTask,
@@ -170,8 +170,8 @@ async function taskAddCommand(
     const priority = parsePriority(options.priority);
     if (priority !== undefined) params.priority = priority;
   }
-  if (options.startDate) params.startDate = options.startDate;
-  if (options.dueDate) params.dueDate = options.dueDate;
+  if (options.startDate) params.startDate = normalizeTickTickDate(options.startDate);
+  if (options.dueDate) params.dueDate = normalizeTickTickDate(options.dueDate);
   if (options.allDay !== undefined) params.isAllDay = options.allDay;
 
   const s = p.spinner();
@@ -288,8 +288,8 @@ async function taskUpdateCommand(
     const priority = parsePriority(options.priority);
     if (priority !== undefined) params.priority = priority;
   }
-  if (options.startDate) params.startDate = options.startDate;
-  if (options.dueDate) params.dueDate = options.dueDate;
+  if (options.startDate) params.startDate = normalizeTickTickDate(options.startDate);
+  if (options.dueDate) params.dueDate = normalizeTickTickDate(options.dueDate);
 
   const s = p.spinner();
   s.start('正在更新任务...');
@@ -473,6 +473,12 @@ async function taskBatchAddCommand(
   } catch {
     p.outro(pc.red('JSON 解析失败，请检查格式'));
     return;
+  }
+
+  // 规范化日期格式
+  for (const task of tasks) {
+    if (task.startDate) task.startDate = normalizeTickTickDate(task.startDate);
+    if (task.dueDate) task.dueDate = normalizeTickTickDate(task.dueDate);
   }
 
   const s = p.spinner();

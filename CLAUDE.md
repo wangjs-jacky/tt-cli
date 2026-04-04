@@ -57,7 +57,7 @@ src/
 
 - 使用 TypeScript strict 模式
 - 注释和输出文案使用中文
-- npm 包名：`@wangjs-jacky/tt-cli`
+- npm 包名：`@wangjs-jacky/ticktick-cli`
 
 ## 参考文档
 
@@ -79,3 +79,4 @@ src/
 - **"无输出"≠"无报错"**：命令完全静默退出时，优先排查命令注册/匹配问题，而非函数逻辑
 - **401 先验端点再验 token**：用 `fetch` 直接测试不同 API 端点，比猜测 token 过期更快定位
 - **验证轮次要克制**：确认 bug 后立即转向修复，不要用多种变体反复验证同一个结论
+- **日期格式必须规范化**：TickTick API 要求 `"2026-04-04T19:00:00.000+0800"`（有毫秒 `.000`，时区无冒号 `+0800`）。传入 `"2026-04-04T19:00:00+08:00"` 会被静默忽略，任务无时间信息。已在 `utils/format.ts` 的 `normalizeTickTickDate()` 中自动转换，`task-add`/`task-update`/`task-batch-add` 均已接入
