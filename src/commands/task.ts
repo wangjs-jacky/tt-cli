@@ -201,7 +201,12 @@ async function taskGetCommand(
     p.outro('任务详情如上');
   } catch (err) {
     s.stop('获取失败');
-    p.outro(pc.red((err as Error).message));
+    const msg = (err as Error).message;
+    p.outro(
+      pc.red(`获取任务失败 (projectId: ${projectId}, taskId: ${taskId})\n`) +
+        pc.red(`${msg}\n`) +
+        pc.yellow('排查建议: 运行 tt task-find <taskId> 或 tt task-search <关键词> 验证任务')
+    );
   }
 }
 
@@ -218,7 +223,12 @@ async function taskDoneCommand(
     p.outro(pc.green('任务已完成'));
   } catch (err) {
     s.stop('操作失败');
-    p.outro(pc.red((err as Error).message));
+    const msg = (err as Error).message;
+    p.outro(
+      pc.red(`任务完成失败 (projectId: ${projectId}, taskId: ${taskId})\n`) +
+        pc.red(`${msg}\n`) +
+        pc.yellow('排查建议: 运行 tt task-search 检查任务是否存在或已完成')
+    );
   }
 }
 
@@ -243,7 +253,12 @@ async function taskDeleteCommand(
     p.outro(pc.green('任务已删除'));
   } catch (err) {
     s.stop('删除失败');
-    p.outro(pc.red((err as Error).message));
+    const msg = (err as Error).message;
+    p.outro(
+      pc.red(`删除任务失败 (projectId: ${projectId}, taskId: ${taskId})\n`) +
+        pc.red(`${msg}\n`) +
+        pc.yellow('排查建议: 运行 tt task-get <projectId> <taskId> 验证任务是否存在')
+    );
   }
 }
 
@@ -285,7 +300,12 @@ async function taskUpdateCommand(
     p.outro(pc.green(`任务「${task.title}」已更新`));
   } catch (err) {
     s.stop('更新失败');
-    p.outro(pc.red((err as Error).message));
+    const msg = (err as Error).message;
+    p.outro(
+      pc.red(`更新任务失败 (taskId: ${taskId}, projectId: ${options.project})\n`) +
+        pc.red(`${msg}\n`) +
+        pc.yellow('排查建议: 运行 tt task-find <taskId> 验证任务是否存在')
+    );
   }
 }
 
@@ -322,7 +342,12 @@ async function taskMoveCommand(
     );
   } catch (err) {
     s.stop('移动失败');
-    p.outro(pc.red((err as Error).message));
+    const msg = (err as Error).message;
+    p.outro(
+      pc.red(`移动任务失败 (taskId: ${taskId}, from: ${options.from}, to: ${options.to})\n`) +
+        pc.red(`${msg}\n`) +
+        pc.yellow('排查建议: 运行 tt project-list 验证项目 ID 是否有效')
+    );
   }
 }
 
