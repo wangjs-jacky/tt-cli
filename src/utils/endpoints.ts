@@ -5,7 +5,7 @@ const ENDPOINTS: Record<Region, RegionEndpoints> = {
   cn: {
     authUrl: 'https://dida365.com/oauth/authorize',
     tokenUrl: 'https://dida365.com/oauth/token',
-    apiBase: 'https://dida365.com/api/v2/',
+    apiBase: 'https://api.dida365.com/open/v1/',
     developerUrl: 'https://developer.dida365.com/app',
   },
   global: {
