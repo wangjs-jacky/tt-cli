@@ -1,5 +1,7 @@
 # tt-cli
 
+[![npm version](https://img.shields.io/npm/v/@wangjs-jacky/tt-cli.svg)](https://www.npmjs.com/package/@wangjs-jacky/tt-cli) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 [English](./README.md) | 中文
 
 滴答清单（TickTick）命令行工具，支持国内版（dida365.com）和国际版（ticktick.com）双区域。

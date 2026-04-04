@@ -1,5 +1,7 @@
 # tt-cli
 
+[![npm version](https://img.shields.io/npm/v/@wangjs-jacky/tt-cli.svg)](https://www.npmjs.com/package/@wangjs-jacky/tt-cli) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 English | [中文](./README_CN.md)
 
 A command-line tool for TickTick (滴答清单), supporting both China region (dida365.com) and Global region (ticktick.com).
