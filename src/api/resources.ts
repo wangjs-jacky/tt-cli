@@ -132,14 +132,18 @@ export function filterTasks(params: FilterTasksParams): Promise<Task[]> {
 
 // ─── 批量操作 ──────────────────────────────────────
 
-/** 批量添加任务 */
-export function batchAddTasks(
+/** 批量添加任务（API 返回 { id2etag: {...} }，不是 Task[]） */
+export async function batchAddTasks(
   tasks: CreateTaskParams[]
-): Promise<Task[]> {
-  return apiRequest<Task[]>('task/batch', {
+): Promise<{ count: number; id2etag?: Record<string, string> }> {
+  const res = await apiRequest<Record<string, unknown>>('task/batch', {
     method: 'POST',
     body: JSON.stringify({ add: tasks }),
   });
+  return {
+    count: tasks.length,
+    id2etag: (res?.id2etag ?? res) as Record<string, string> | undefined,
+  };
 }
 
 /** 批量更新任务 */
@@ -172,10 +176,16 @@ export async function completeTasksInProject(
 
 // ─── 查询 ──────────────────────────────────────────
 
-/** 按 ID 查找任务（无需 projectId） */
+/** 按 ID 查找任务（无需 projectId，同时搜索未完成和已完成任务） */
 export async function getTaskById(taskId: string): Promise<Task> {
-  const tasks = await filterTasks({});
-  const task = tasks.find((t) => t.id === taskId);
+  // 并行获取未完成任务和已完成任务，确保覆盖所有任务
+  // 注意：filterTasks API 有返回数量限制，改用 listUndoneTasksByDate 获取更完整的数据
+  const [undoneTasks, completedTasks] = await Promise.all([
+    listUndoneTasksByDate({}),
+    getCompletedTasks({}),
+  ]);
+  const allTasks = [...undoneTasks, ...completedTasks];
+  const task = allTasks.find((t) => t.id === taskId);
   if (!task) throw new Error(`任务 ${taskId} 不存在`);
   return task;
 }
@@ -256,11 +266,24 @@ export function listUndoneTasksByTimeQuery(
   return listUndoneTasksByDate({ startDate, endDate });
 }
 
-/** 搜索任务（关键词匹配） */
+/** 搜索任务（关键词匹配，同时搜索未完成和已完成任务） */
 export async function searchTask(keyword: string): Promise<Task[]> {
-  const tasks = await filterTasks({});
+  // 并行获取未完成任务和已完成任务，确保覆盖所有任务
+  // 注意：filterTasks API 有返回数量限制，改用 listUndoneTasksByDate 获取更完整的数据
+  const [undoneTasks, completedTasks] = await Promise.all([
+    listUndoneTasksByDate({}),
+    getCompletedTasks({}),
+  ]);
+
+  // 合并并去重（按 id）
+  const taskMap = new Map<string, Task>();
+  for (const t of [...undoneTasks, ...completedTasks]) {
+    taskMap.set(t.id, t);
+  }
+  const allTasks = Array.from(taskMap.values());
+
   const lower = keyword.toLowerCase();
-  return tasks.filter(
+  return allTasks.filter(
     (t) =>
       t.title.toLowerCase().includes(lower) ||
       (t.content && t.content.toLowerCase().includes(lower))

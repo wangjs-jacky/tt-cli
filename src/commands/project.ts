@@ -126,12 +126,20 @@ async function projectGetCommand(id: string): Promise<void> {
   }
 }
 
-async function projectTasksCommand(id: string): Promise<void> {
-  const s = p.spinner();
-  s.start('正在获取项目任务...');
-
+async function projectTasksCommand(
+  id: string,
+  options: { json?: boolean }
+): Promise<void> {
   try {
     const data = await getProjectData(id);
+
+    if (options.json) {
+      console.log(JSON.stringify(data.tasks, null, 2));
+      return;
+    }
+
+    const s = p.spinner();
+    s.start('正在获取项目任务...');
     s.stop(
       `项目「${data.project.name}」下有 ${data.tasks.length} 个任务`
     );
@@ -271,6 +279,7 @@ export function registerProjectCommands(cli: {
 
   cli
     .command('project-tasks <id>', '获取项目下的任务')
+    .option('--json', '输出 JSON 格式')
     .action(projectTasksCommand);
 
   cli

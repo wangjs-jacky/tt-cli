@@ -96,7 +96,7 @@ function displayTaskTable(tasks: Task[]): void {
     const time = formatTaskTime(task);
     const timeStr = time ? pc.cyan(time) : '';
     console.log(
-      `  ${icon} ${title}  ${timeStr}  ${priorityText(task.priority)}  ${pc.dim(task.projectId)}`
+      `  ${icon} ${title}  ${timeStr}  ${pc.dim(task.id)}  ${priorityText(task.priority)}  ${pc.dim(task.projectId)}`
     );
   }
 }
@@ -395,6 +395,7 @@ async function taskListCommand(options: {
   status?: string;
   priority?: string;
   tag?: string;
+  json?: boolean;
 }): Promise<void> {
   const params: {
     projectIds?: string[];
@@ -420,11 +421,16 @@ async function taskListCommand(options: {
     params.tag = options.tag.split(',');
   }
 
-  const s = p.spinner();
-  s.start('正在筛选任务...');
-
   try {
     const tasks = await filterTasks(params);
+
+    if (options.json) {
+      console.log(JSON.stringify(tasks, null, 2));
+      return;
+    }
+
+    const s = p.spinner();
+    s.start('正在筛选任务...');
     s.stop(`找到 ${tasks.length} 个任务`);
 
     if (tasks.length === 0) {
@@ -437,7 +443,6 @@ async function taskListCommand(options: {
     console.log('');
     p.outro(`共 ${tasks.length} 个任务`);
   } catch (err) {
-    s.stop('获取失败');
     p.outro(pc.red((err as Error).message));
   }
 }
@@ -485,14 +490,14 @@ async function taskBatchAddCommand(
   s.start(`正在批量创建 ${tasks.length} 个任务...`);
 
   try {
-    const created = await batchAddTasks(tasks);
-    s.stop(`成功创建 ${created.length} 个任务`);
+    const result = await batchAddTasks(tasks);
+    s.stop(`成功创建 ${result.count} 个任务`);
     console.log('');
-    for (const task of created) {
-      console.log(`  ${pc.green('✓')} ${task.title} ${pc.dim(task.id)}`);
+    for (const task of tasks) {
+      console.log(`  ${pc.green('✓')} ${task.title}`);
     }
     console.log('');
-    p.outro(`共创建 ${created.length} 个任务`);
+    p.outro(`共创建 ${result.count} 个任务`);
   } catch (err) {
     s.stop('批量创建失败');
     p.outro(pc.red((err as Error).message));
@@ -625,11 +630,9 @@ async function taskUndoneCommand(options: {
   end?: string;
   query?: string;
   project?: string;
+  json?: boolean;
 }): Promise<void> {
   let tasks: Task[];
-
-  const s = p.spinner();
-  s.start('正在获取未完成任务...');
 
   try {
     if (options.query) {
@@ -644,6 +647,13 @@ async function taskUndoneCommand(options: {
       tasks = await listUndoneTasksByDate(params);
     }
 
+    if (options.json) {
+      console.log(JSON.stringify(tasks, null, 2));
+      return;
+    }
+
+    const s = p.spinner();
+    s.start('正在获取未完成任务...');
     s.stop(`找到 ${tasks.length} 个未完成任务`);
 
     if (tasks.length === 0) {
@@ -755,6 +765,7 @@ export function registerTaskCommands(cli: {
     .option('--status <n>', '状态，逗号分隔: 0(待办),2(已完成)')
     .option('--priority <n>', '优先级，逗号分隔: 0,1,3,5')
     .option('--tag <tag>', '标签，逗号分隔')
+    .option('--json', '输出 JSON 格式')
     .action(taskListCommand);
 
   // ─── 批量 / 高级命令 ────────────────────────────
@@ -786,6 +797,7 @@ export function registerTaskCommands(cli: {
     .option('--end <date>', '结束日期')
     .option('--query <preset>', '预设查询: today|tomorrow|last24hour|next24hour|last7day|next7day')
     .option('-p, --project <id>', '按项目筛选')
+    .option('--json', '输出 JSON 格式')
     .action(taskUndoneCommand);
 
   cli
