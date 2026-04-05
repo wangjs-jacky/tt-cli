@@ -533,6 +533,12 @@ async function taskBatchUpdateCommand(
     return;
   }
 
+  // 规范化日期格式
+  for (const task of tasks) {
+    if (task.startDate) task.startDate = normalizeTickTickDate(task.startDate);
+    if (task.dueDate) task.dueDate = normalizeTickTickDate(task.dueDate);
+  }
+
   const s = p.spinner();
   s.start(`正在批量更新 ${tasks.length} 个任务...`);
 
