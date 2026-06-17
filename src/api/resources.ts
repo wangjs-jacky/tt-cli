@@ -266,26 +266,40 @@ export function listUndoneTasksByTimeQuery(
   return listUndoneTasksByDate({ startDate, endDate });
 }
 
-/** 搜索任务（关键词匹配，同时搜索未完成和已完成任务） */
+/** 搜索任务（关键词匹配，全清单覆盖：含无日期 / 非收集箱清单的任务） */
 export async function searchTask(keyword: string): Promise<Task[]> {
-  // 并行获取未完成任务和已完成任务，确保覆盖所有任务
-  // 注意：filterTasks API 有返回数量限制，改用 listUndoneTasksByDate 获取更完整的数据
-  const [undoneTasks, completedTasks] = await Promise.all([
-    listUndoneTasksByDate({}),
-    getCompletedTasks({}),
+  // 说明：task/filter 与按日期查询会漏掉「无日期 + 非收集箱」的任务
+  // （典型如「任务池」「五色清单」里随手记的待办），因此遍历每个项目的
+  // /project/{id}/data 兜底，确保覆盖所有清单的所有任务。
+  const [byDate, completedTasks, projects] = await Promise.all([
+    listUndoneTasksByDate({}), // 覆盖收集箱 + 带日期的未完成任务
+    getCompletedTasks({}), // 覆盖已完成任务
+    getProjects(), // 全部项目（开放 API 不含收集箱）
   ]);
+
+  // 并行拉取每个项目的全部任务（无日期也能拿到）；单个项目失败不影响整体
+  const projectTaskLists = await Promise.all(
+    projects.map((proj) =>
+      getProjectData(proj.id)
+        .then((data) => data.tasks ?? [])
+        .catch(() => [] as Task[])
+    )
+  );
 
   // 合并并去重（按 id）
   const taskMap = new Map<string, Task>();
-  for (const t of [...undoneTasks, ...completedTasks]) {
+  for (const t of [...byDate, ...completedTasks, ...projectTaskLists.flat()]) {
     taskMap.set(t.id, t);
   }
   const allTasks = Array.from(taskMap.values());
 
   const lower = keyword.toLowerCase();
-  return allTasks.filter(
-    (t) =>
-      t.title.toLowerCase().includes(lower) ||
-      (t.content && t.content.toLowerCase().includes(lower))
-  );
+  return allTasks.filter((t) => {
+    const inTitle = t.title?.toLowerCase().includes(lower) ?? false;
+    const inContent = t.content?.toLowerCase().includes(lower) ?? false;
+    const inTags =
+      Array.isArray(t.tags) &&
+      t.tags.some((tag) => tag.toLowerCase().includes(lower));
+    return inTitle || inContent || inTags;
+  });
 }

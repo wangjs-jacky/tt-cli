@@ -677,7 +677,17 @@ async function taskUndoneCommand(options: {
   }
 }
 
-async function taskSearchCommand(keyword: string): Promise<void> {
+async function taskSearchCommand(
+  keyword: string,
+  options: { json?: boolean } = {}
+): Promise<void> {
+  // JSON 模式：不渲染 spinner，直接输出结构化数据，避免污染管道
+  if (options.json) {
+    const tasks = await searchTask(keyword);
+    console.log(JSON.stringify(tasks, null, 2));
+    return;
+  }
+
   const s = p.spinner();
   s.start(`正在搜索 "${keyword}"...`);
 
@@ -808,5 +818,6 @@ export function registerTaskCommands(cli: {
 
   cli
     .command('task-search <keyword>', '搜索任务')
+    .option('--json', '输出 JSON 格式')
     .action(taskSearchCommand);
 }
