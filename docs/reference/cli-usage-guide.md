@@ -118,6 +118,9 @@ Token: xxxxxxxx...
 
 ```bash
 tt project-list
+
+# 输出原始 JSON，适合脚本处理
+tt project-list --json
 ```
 
 **输出示例**：
@@ -318,6 +321,9 @@ tt task-completed
 
 # 按项目和日期范围
 tt task-completed -p abc123def456 --start "2026-04-01" --end "2026-04-30"
+
+# 输出原始 JSON，适合脚本处理
+tt task-completed --start "2026-04-01" --end "2026-04-30" --json
 ```
 
 | 选项 | 说明 |
@@ -325,6 +331,7 @@ tt task-completed -p abc123def456 --start "2026-04-01" --end "2026-04-30"
 | `-p, --project <id>` | 按项目筛选 |
 | `--start <date>` | 开始日期 |
 | `--end <date>` | 结束日期 |
+| `--json` | 输出 JSON 格式 |
 
 #### `tt task-undone` — 查看未完成任务
 

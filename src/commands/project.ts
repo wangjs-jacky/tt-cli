@@ -67,7 +67,13 @@ function displayTaskList(tasks: Task[]): void {
 
 // ─── 命令实现 ────────────────────────────────────────
 
-async function projectListCommand(): Promise<void> {
+async function projectListCommand(options: { json?: boolean } = {}): Promise<void> {
+  if (options.json) {
+    const projects = await getProjects();
+    console.log(JSON.stringify(projects, null, 2));
+    return;
+  }
+
   const s = p.spinner();
   s.start('正在获取项目列表...');
 
@@ -271,6 +277,7 @@ export function registerProjectCommands(cli: {
 }): void {
   cli
     .command('project-list', '列出所有项目')
+    .option('--json', '输出 JSON 格式')
     .action(projectListCommand);
 
   cli

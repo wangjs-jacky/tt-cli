@@ -355,6 +355,7 @@ async function taskCompletedCommand(options: {
   project?: string;
   start?: string;
   end?: string;
+  json?: boolean;
 }): Promise<void> {
   const params: {
     projectIds?: string[];
@@ -365,6 +366,12 @@ async function taskCompletedCommand(options: {
   if (options.project) params.projectIds = [options.project];
   if (options.start) params.startDate = options.start;
   if (options.end) params.endDate = options.end;
+
+  if (options.json) {
+    const tasks = await getCompletedTasks(params);
+    console.log(JSON.stringify(tasks, null, 2));
+    return;
+  }
 
   const s = p.spinner();
   s.start('正在获取已完成任务...');
@@ -771,6 +778,7 @@ export function registerTaskCommands(cli: {
     .option('-p, --project <id>', '按项目筛选')
     .option('--start <date>', '开始日期')
     .option('--end <date>', '结束日期')
+    .option('--json', '输出 JSON 格式')
     .action(taskCompletedCommand);
 
   cli
